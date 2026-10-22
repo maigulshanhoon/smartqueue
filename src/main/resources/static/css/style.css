@@ -1047,8 +1047,11 @@ main {
 
   .nav-links {
     width: 100%;
-    justify-content: space-between;
-    padding-top: 0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    align-items: center;
+    padding-top: 0.25rem;
   }
 
   .ticket-meta-grid {
