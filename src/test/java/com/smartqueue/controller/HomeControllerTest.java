@@ -27,8 +27,8 @@ class HomeControllerTest {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("index"))
-                .andExpect(model().attribute("appName", "SmartQueue"))
-                .andExpect(content().string(containsString("SmartQueue")));
+                .andExpect(model().attribute("appName", "WaitWise"))
+                .andExpect(content().string(containsString("WaitWise")));
     }
 
     @Test

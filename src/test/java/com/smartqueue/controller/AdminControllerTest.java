@@ -113,4 +113,25 @@ class AdminControllerTest {
                 .andExpect(redirectedUrl("/admin"))
                 .andExpect(flash().attributeExists("infoMessage"));
     }
+
+    @Test
+    void authenticatedUserCanCancelToken() throws Exception {
+        QueueToken t1 = queueService.issueToken(ServiceType.TECHNICAL_SUPPORT, "Charlie");
+
+        MockHttpSession session = new MockHttpSession();
+        session.setAttribute(AdminAuthService.SESSION_KEY, Boolean.TRUE);
+
+        mockMvc.perform(post("/admin/tokens/" + t1.getId() + "/cancel")
+                        .session(session))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin"))
+                .andExpect(flash().attributeExists("infoMessage"));
+    }
+
+    @Test
+    void unauthenticatedActionRedirectsToLogin() throws Exception {
+        mockMvc.perform(post("/admin/call-next"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/admin/login"));
+    }
 }

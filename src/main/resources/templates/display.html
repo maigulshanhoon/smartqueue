@@ -3,21 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartQueue — Live Queue Display</title>
-    <meta name="description" content="Live digital queue display board showing now serving tokens and next in line.">
+    <title>WaitWise — Live Queue Display</title>
+    <meta name="description" content="WaitWise Live Digital Queue Display Board showing now serving tokens and next in line.">
     <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
 </head>
 <body class="display-body">
 
-    <!-- Top Header -->
+    <!-- Top Display Header -->
     <header class="display-header">
-        <a href="/" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #ffffff;">
-            <span class="brand-icon">SQ</span>
-            <span style="font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em;">SmartQueue Display Board</span>
+        <a href="/" style="display: flex; align-items: center; gap: 0.85rem; text-decoration: none; color: #ffffff;">
+            <span class="brand-icon" style="box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);">WW</span>
+            <div>
+                <div style="font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em;">Wait<span style="color: #818cf8;">Wise</span> <span style="font-size: 1rem; font-weight: 600; color: #94a3b8;">Display Board</span></div>
+                <div style="font-size: 0.75rem; color: #64748b; font-weight: 500;">Less Waiting. More Doing.</div>
+            </div>
         </a>
         <div style="display: flex; align-items: center; gap: 1.5rem;">
-            <div id="liveTime" style="font-family: var(--font-mono); font-size: 1.15rem; color: #94a3b8; font-weight: 600;">--:--:--</div>
-            <div class="status-badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: #059669;">
+            <div id="liveTime" style="font-family: var(--font-mono); font-size: 1.25rem; color: #cbd5e1; font-weight: 700;">--:--:--</div>
+            <div class="status-badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: #059669; padding: 0.4rem 0.85rem;">
                 <span class="pulse-dot"></span>
                 <span>Live Feed</span>
             </div>
@@ -26,14 +29,14 @@
     </header>
 
     <main class="display-container">
-        <!-- Left Column: Primary Now Serving Card -->
+        <!-- Left Column: Primary Now Serving Board -->
         <section class="display-main-card" id="primaryServingContainer" aria-live="polite">
             <div class="display-main-label">&#128227; NOW SERVING</div>
             
             <div th:if="${#lists.isEmpty(servingTokens)}" id="emptyServingMessage">
-                <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.4;">&#9203;</div>
-                <div style="font-size: 2.25rem; font-weight: 700; color: #64748b;">Counters Open</div>
-                <div style="font-size: 1.15rem; color: #475569; margin-top: 0.5rem;">Please take a token at the kiosk</div>
+                <div style="font-size: 3.5rem; margin-bottom: 1rem; opacity: 0.4;">&#9203;</div>
+                <div style="font-size: 2.5rem; font-weight: 800; color: #64748b;">Counters Open</div>
+                <div style="font-size: 1.2rem; color: #475569; margin-top: 0.65rem;">Please generate a token at the kiosk</div>
             </div>
 
             <div th:unless="${#lists.isEmpty(servingTokens)}" id="activeServingContent">
@@ -43,10 +46,11 @@
             </div>
         </section>
 
-        <!-- Right Column: Other Serving & Upcoming Tokens -->
+        <!-- Right Column: Other Active Counters & Upcoming Waiting Tokens -->
         <section class="display-sidebar">
-            <!-- Secondary Serving Counters if multiple counters are active -->
-            <div id="additionalCountersSection" style="margin-bottom: 1.75rem;">
+            
+            <!-- Secondary Serving Desks (if multiple counters are active) -->
+            <div class="display-side-card" id="additionalCountersSection">
                 <div class="display-side-title">
                     <span>Active Counters</span>
                     <span id="activeCounterCount" class="badge badge-serving" th:text="${#lists.size(servingTokens)}">0</span>
@@ -65,30 +69,32 @@
                 </div>
             </div>
 
-            <!-- Upcoming In Line Tokens -->
-            <div>
+            <!-- Upcoming Queue Entries -->
+            <div class="display-side-card">
                 <div class="display-side-title">
                     <span>Upcoming In Queue</span>
                     <span id="waitingCountBadge" class="badge badge-waiting" th:text="${#lists.size(waitingTokens)}">0</span>
                 </div>
                 
                 <div id="waitingQueueList">
-                    <div th:if="${#lists.isEmpty(waitingTokens)}" id="emptyWaitingMsg" style="color: #64748b; font-size: 0.9rem; padding: 1rem 0; text-align: center;">
-                        Queue is currently clear.
+                    <div th:if="${#lists.isEmpty(waitingTokens)}" id="emptyWaitingMsg" style="color: #64748b; font-size: 0.925rem; padding: 1.5rem 0; text-align: center;">
+                        <div style="font-size: 1.75rem; margin-bottom: 0.35rem; opacity: 0.5;">&#10004;&#65039;</div>
+                        <div>Queue is currently clear.</div>
                     </div>
                     <div th:each="waiting, iter : ${waitingTokens}" th:if="${iter.index < 6}" class="display-queue-item">
                         <div>
                             <span class="display-queue-token" th:text="${waiting.tokenNumber}">GEN-003</span>
-                            <div style="color: #94a3b8; font-size: 0.8rem;" th:text="${waiting.serviceType.displayName}">Tech Support</div>
+                            <div style="color: #94a3b8; font-size: 0.825rem;" th:text="${waiting.serviceType.displayName}">Tech Support</div>
                         </div>
-                        <span style="font-size: 0.825rem; color: #94a3b8;" th:text="'#' + ${iter.count} + ' in line'">#1 in line</span>
+                        <span style="font-size: 0.825rem; color: #94a3b8; font-weight: 600;" th:text="'#' + ${iter.count} + ' in line'">#1 in line</span>
                     </div>
                 </div>
             </div>
+
         </section>
     </main>
 
-    <!-- Auto-polling JavaScript for dynamic updates without page reload -->
+    <!-- Auto-polling JavaScript for dynamic live updates without page reload -->
     <script>
         // Update Live Clock
         function updateClock() {
@@ -101,7 +107,7 @@
 
         let lastServingToken = null;
 
-        // Fetch Live Queue Data
+        // Fetch Live Queue Status via REST API
         async function refreshQueue() {
             try {
                 const response = await fetch('/api/queue/status');
@@ -124,18 +130,18 @@
 
                     // Trigger visual flash if new token is called
                     if (lastServingToken && lastServingToken !== top.tokenNumber) {
-                        primaryContainer.style.boxShadow = '0 0 50px rgba(16, 185, 129, 0.6)';
+                        primaryContainer.style.boxShadow = '0 0 60px rgba(16, 185, 129, 0.7)';
                         setTimeout(() => {
                             primaryContainer.style.boxShadow = '';
-                        }, 1500);
+                        }, 1800);
                     }
                     lastServingToken = top.tokenNumber;
                 } else {
                     primaryContainer.innerHTML = `
                         <div class="display-main-label">&#128227; NOW SERVING</div>
-                        <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.4;">&#9203;</div>
-                        <div style="font-size: 2.25rem; font-weight: 700; color: #64748b;">Counters Open</div>
-                        <div style="font-size: 1.15rem; color: #475569; margin-top: 0.5rem;">Please take a token at the kiosk</div>
+                        <div style="font-size: 3.5rem; margin-bottom: 1rem; opacity: 0.4;">&#9203;</div>
+                        <div style="font-size: 2.5rem; font-weight: 800; color: #64748b;">Counters Open</div>
+                        <div style="font-size: 1.2rem; color: #475569; margin-top: 0.65rem;">Please generate a token at the kiosk</div>
                     `;
                     lastServingToken = null;
                 }
@@ -166,7 +172,12 @@
                 document.getElementById('waitingCountBadge').textContent = waiting.length;
                 const waitingQueueList = document.getElementById('waitingQueueList');
                 if (waiting.length === 0) {
-                    waitingQueueList.innerHTML = `<div style="color: #64748b; font-size: 0.9rem; padding: 1rem 0; text-align: center;">Queue is currently clear.</div>`;
+                    waitingQueueList.innerHTML = `
+                        <div id="emptyWaitingMsg" style="color: #64748b; font-size: 0.925rem; padding: 1.5rem 0; text-align: center;">
+                            <div style="font-size: 1.75rem; margin-bottom: 0.35rem; opacity: 0.5;">&#10004;&#65039;</div>
+                            <div>Queue is currently clear.</div>
+                        </div>
+                    `;
                 } else {
                     let html = '';
                     const limit = Math.min(waiting.length, 6);
@@ -176,9 +187,9 @@
                             <div class="display-queue-item">
                                 <div>
                                     <span class="display-queue-token">${w.tokenNumber}</span>
-                                    <div style="color: #94a3b8; font-size: 0.8rem;">${w.serviceType?.displayName || w.serviceType}</div>
+                                    <div style="color: #94a3b8; font-size: 0.825rem;">${w.serviceType?.displayName || w.serviceType}</div>
                                 </div>
-                                <span style="font-size: 0.825rem; color: #94a3b8;">#${i + 1} in line</span>
+                                <span style="font-size: 0.825rem; color: #94a3b8; font-weight: 600;">#${i + 1} in line</span>
                             </div>
                         `;
                     }

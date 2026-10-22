@@ -27,7 +27,8 @@ public class HomeController {
     public String index(
             @RequestParam(name = "tokenNumber", required = false) String tokenNumber,
             Model model) {
-        model.addAttribute("appName", "SmartQueue");
+        model.addAttribute("appName", "WaitWise");
+        model.addAttribute("tagline", "Less Waiting. More Doing.");
         model.addAttribute("services", ServiceType.values());
 
         QueueStats stats = queueService.getQueueStats();

@@ -10,7 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -76,14 +78,44 @@ public class QueueService {
     }
 
     /**
-     * Completes an active or waiting token.
+     * Marks an active token as Served / Completed.
      */
     @Transactional
     public QueueToken completeToken(Long tokenId) {
         QueueToken token = tokenRepository.findById(tokenId)
                 .orElseThrow(() -> new IllegalArgumentException("Token not found with ID: " + tokenId));
 
+        if (token.getStatus() == TokenStatus.COMPLETED) {
+            throw new IllegalStateException("Token is already marked as served.");
+        }
+        if (token.getStatus() == TokenStatus.CANCELLED) {
+            throw new IllegalStateException("Cannot serve a cancelled token.");
+        }
+        if (token.getStatus() == TokenStatus.SKIPPED) {
+            throw new IllegalStateException("Cannot serve a skipped token.");
+        }
+
         token.setStatus(TokenStatus.COMPLETED);
+        token.setCompletedAt(LocalDateTime.now());
+        return tokenRepository.save(token);
+    }
+
+    /**
+     * Cancels a waiting or active token.
+     */
+    @Transactional
+    public QueueToken cancelToken(Long tokenId) {
+        QueueToken token = tokenRepository.findById(tokenId)
+                .orElseThrow(() -> new IllegalArgumentException("Token not found with ID: " + tokenId));
+
+        if (token.getStatus() == TokenStatus.COMPLETED) {
+            throw new IllegalStateException("Cannot cancel an already served token.");
+        }
+        if (token.getStatus() == TokenStatus.CANCELLED) {
+            throw new IllegalStateException("Token is already cancelled.");
+        }
+
+        token.setStatus(TokenStatus.CANCELLED);
         token.setCompletedAt(LocalDateTime.now());
         return tokenRepository.save(token);
     }
@@ -95,6 +127,16 @@ public class QueueService {
     public QueueToken skipToken(Long tokenId) {
         QueueToken token = tokenRepository.findById(tokenId)
                 .orElseThrow(() -> new IllegalArgumentException("Token not found with ID: " + tokenId));
+
+        if (token.getStatus() == TokenStatus.COMPLETED) {
+            throw new IllegalStateException("Cannot skip an already served token.");
+        }
+        if (token.getStatus() == TokenStatus.CANCELLED) {
+            throw new IllegalStateException("Cannot skip a cancelled token.");
+        }
+        if (token.getStatus() == TokenStatus.SKIPPED) {
+            throw new IllegalStateException("Token is already skipped.");
+        }
 
         token.setStatus(TokenStatus.SKIPPED);
         token.setCompletedAt(LocalDateTime.now());
@@ -108,6 +150,13 @@ public class QueueService {
     public QueueToken callSpecificToken(Long tokenId, String counterName) {
         QueueToken token = tokenRepository.findById(tokenId)
                 .orElseThrow(() -> new IllegalArgumentException("Token not found with ID: " + tokenId));
+
+        if (token.getStatus() == TokenStatus.COMPLETED) {
+            throw new IllegalStateException("Cannot call an already served token.");
+        }
+        if (token.getStatus() == TokenStatus.CANCELLED) {
+            throw new IllegalStateException("Cannot call a cancelled token.");
+        }
 
         String effectiveCounter = (counterName == null || counterName.trim().isEmpty())
                 ? "Counter 1"
@@ -125,9 +174,16 @@ public class QueueService {
         long serving = tokenRepository.countByStatus(TokenStatus.SERVING);
         long completed = tokenRepository.countByStatus(TokenStatus.COMPLETED);
         long skipped = tokenRepository.countByStatus(TokenStatus.SKIPPED);
+        long cancelled = tokenRepository.countByStatus(TokenStatus.CANCELLED);
         long totalToday = tokenRepository.countCreatedSince(LocalDate.now().atStartOfDay());
 
-        return new QueueStats(waiting, serving, completed, skipped, totalToday);
+        Map<String, Long> byService = new LinkedHashMap<>();
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        for (ServiceType type : ServiceType.values()) {
+            byService.put(type.getDisplayName(), tokenRepository.countByServiceTypeAndCreatedSince(type, startOfDay));
+        }
+
+        return new QueueStats(waiting, serving, completed, skipped, cancelled, totalToday, byService);
     }
 
     @Transactional(readOnly = true)
@@ -142,7 +198,14 @@ public class QueueService {
 
     @Transactional(readOnly = true)
     public List<QueueToken> getRecentTokens() {
-        return tokenRepository.findTop15ByStatusInOrderByCompletedAtDesc(List.of(TokenStatus.COMPLETED, TokenStatus.SKIPPED));
+        return tokenRepository.findTop15ByStatusInOrderByCompletedAtDesc(
+                List.of(TokenStatus.COMPLETED, TokenStatus.SKIPPED, TokenStatus.CANCELLED)
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public List<QueueToken> getAllTokens() {
+        return tokenRepository.findTop50ByOrderByCreatedAtDesc();
     }
 
     @Transactional(readOnly = true)

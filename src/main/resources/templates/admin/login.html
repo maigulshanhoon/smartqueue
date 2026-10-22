@@ -3,16 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartQueue Admin — Sign In</title>
+    <title>WaitWise Admin — Operator Sign In</title>
+    <meta name="description" content="WaitWise Admin Console Sign In. Manage and dispatch queue counters.">
     <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
 </head>
 <body>
 
     <header class="site-header">
         <div class="nav-container">
-            <a href="/" class="brand">
-                <span class="brand-icon">SQ</span>
-                <span>SmartQueue</span>
+            <a href="/" class="brand-wrapper">
+                <span class="brand-icon">WW</span>
+                <div class="brand-details">
+                    <span class="brand-title">Wait<span class="brand-accent">Wise</span></span>
+                    <span class="brand-tagline">Less Waiting. More Doing.</span>
+                </div>
             </a>
             <ul class="nav-links">
                 <li><a href="/">Kiosk</a></li>
@@ -22,13 +26,13 @@
         </div>
     </header>
 
-    <main style="display: flex; align-items: center; justify-content: center; min-height: 70vh;">
-        <div class="card" style="width: 100%; max-width: 420px; box-shadow: var(--shadow-xl); padding: 2.25rem;">
+    <main style="display: flex; align-items: center; justify-content: center; min-height: 72vh;">
+        <div class="card" style="width: 100%; max-width: 440px; box-shadow: var(--shadow-xl); padding: 2.5rem; border: 1.5px solid var(--border);">
             
-            <div style="text-align: center; margin-bottom: 1.75rem;">
-                <div class="brand-icon" style="margin: 0 auto 1rem auto; width: 48px; height: 48px; font-size: 1.35rem;">SQ</div>
-                <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.25rem;">Desk Operator Sign In</h1>
-                <p style="font-size: 0.875rem; color: var(--text-muted);">Log in to manage and dispatch queue counters</p>
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <div class="brand-icon" style="margin: 0 auto 1.25rem auto; width: 52px; height: 52px; font-size: 1.5rem;">WW</div>
+                <h1 style="font-size: 1.6rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.35rem; letter-spacing: -0.02em;">Operator Sign In</h1>
+                <p style="font-size: 0.875rem; color: var(--text-muted);">Access the WaitWise Counter Operations Console</p>
             </div>
 
             <!-- Flash Alerts -->
@@ -48,20 +52,20 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="password" class="form-label">Password</label>
+                    <label for="password" class="form-label">Operator Password</label>
                     <input type="password" id="password" name="password" class="form-input" required placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;">
                 </div>
 
-                <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top: 1rem;">
+                <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top: 1.25rem;">
                     <span>Sign In to Dashboard &rarr;</span>
                 </button>
             </form>
 
             <!-- Safe Demo Credentials Banner -->
-            <div style="margin-top: 1.75rem; padding: 0.85rem; background-color: var(--surface-alt); border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 0.8rem; color: var(--text-muted); text-align: center;">
-                <strong>Demo Credentials:</strong><br>
-                Username: <code style="color: var(--primary); font-weight: 600;">admin</code> &bull; Password: <code style="color: var(--primary); font-weight: 600;">admin123</code><br>
-                <span style="font-size: 0.725rem; color: var(--text-dim);">(Configurable via ADMIN_USERNAME & ADMIN_PASSWORD env vars)</span>
+            <div style="margin-top: 2rem; padding: 1rem; background-color: var(--surface-alt); border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 0.825rem; color: var(--text-muted); text-align: center;">
+                <strong style="color: var(--text-main);">Demo Credentials:</strong><br>
+                Username: <code style="color: var(--primary); font-weight: 700;">admin</code> &bull; Password: <code style="color: var(--primary); font-weight: 700;">admin123</code><br>
+                <span style="font-size: 0.725rem; color: var(--text-dim);">(Configurable via ADMIN_USERNAME &amp; ADMIN_PASSWORD env vars)</span>
             </div>
 
         </div>
@@ -69,7 +73,7 @@
 
     <footer class="site-footer">
         <div class="footer-container">
-            <p>&copy; 2026 SmartQueue. Operational Desk Access.</p>
+            <p>&copy; 2026 <strong>WaitWise</strong> &mdash; Operational Desk Access.</p>
             <ul class="footer-links">
                 <li><a href="/">Home</a></li>
                 <li><a href="/display">Display</a></li>

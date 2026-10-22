@@ -111,6 +111,38 @@ class QueueServiceTest {
     }
 
     @Test
+    void shouldCancelToken() {
+        QueueToken t1 = queueService.issueToken(ServiceType.TECHNICAL_SUPPORT, "Alice");
+
+        QueueToken cancelled = queueService.cancelToken(t1.getId());
+
+        assertEquals(TokenStatus.CANCELLED, cancelled.getStatus());
+        assertNotNull(cancelled.getCompletedAt());
+    }
+
+    @Test
+    void shouldPreventInvalidStatusTransitions() {
+        QueueToken t1 = queueService.issueToken(ServiceType.GENERAL_ENQUIRY, "Alice");
+        queueService.callNext("Counter 1", null);
+        queueService.completeToken(t1.getId());
+
+        // Cannot complete an already completed token
+        assertThrows(IllegalStateException.class, () -> queueService.completeToken(t1.getId()));
+        // Cannot cancel an already completed token
+        assertThrows(IllegalStateException.class, () -> queueService.cancelToken(t1.getId()));
+        // Cannot call an already completed token
+        assertThrows(IllegalStateException.class, () -> queueService.callSpecificToken(t1.getId(), "Counter 2"));
+
+        QueueToken t2 = queueService.issueToken(ServiceType.BILLING, "Bob");
+        queueService.cancelToken(t2.getId());
+
+        // Cannot complete a cancelled token
+        assertThrows(IllegalStateException.class, () -> queueService.completeToken(t2.getId()));
+        // Cannot call a cancelled token
+        assertThrows(IllegalStateException.class, () -> queueService.callSpecificToken(t2.getId(), "Counter 1"));
+    }
+
+    @Test
     void shouldTrackAccurateQueueStatistics() {
         QueueToken t1 = queueService.issueToken(ServiceType.GENERAL_ENQUIRY, "T1");
         QueueToken t2 = queueService.issueToken(ServiceType.BILLING, "T2");
@@ -127,5 +159,7 @@ class QueueServiceTest {
         assertEquals(1, stats.totalCompleted());
         assertEquals(1, stats.totalSkipped());
         assertEquals(3, stats.totalToday());
+        assertNotNull(stats.byService());
+        assertEquals(1, stats.byService().get(ServiceType.GENERAL_ENQUIRY.getDisplayName()));
     }
 }

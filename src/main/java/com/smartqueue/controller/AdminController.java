@@ -3,6 +3,7 @@ package com.smartqueue.controller;
 import com.smartqueue.model.QueueStats;
 import com.smartqueue.model.QueueToken;
 import com.smartqueue.model.ServiceType;
+import com.smartqueue.model.TokenStatus;
 import com.smartqueue.service.AdminAuthService;
 import com.smartqueue.service.QueueService;
 import jakarta.servlet.http.HttpSession;
@@ -67,12 +68,15 @@ public class AdminController {
         List<QueueToken> serving = queueService.getCurrentlyServing();
         List<QueueToken> waiting = queueService.getWaitingTokens();
         List<QueueToken> recent = queueService.getRecentTokens();
+        List<QueueToken> allTokens = queueService.getAllTokens();
 
         model.addAttribute("stats", stats);
         model.addAttribute("servingTokens", serving);
         model.addAttribute("waitingTokens", waiting);
         model.addAttribute("recentTokens", recent);
+        model.addAttribute("allTokens", allTokens);
         model.addAttribute("services", ServiceType.values());
+        model.addAttribute("statuses", TokenStatus.values());
 
         return "admin/dashboard";
     }
@@ -139,7 +143,7 @@ public class AdminController {
         try {
             QueueToken token = queueService.completeToken(id);
             redirectAttributes.addFlashAttribute("successMessage",
-                    "Token " + token.getTokenNumber() + " marked as COMPLETED.");
+                    "Token " + token.getTokenNumber() + " marked as SERVED.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }
@@ -161,6 +165,27 @@ public class AdminController {
             QueueToken token = queueService.skipToken(id);
             redirectAttributes.addFlashAttribute("infoMessage",
                     "Token " + token.getTokenNumber() + " marked as SKIPPED.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+        }
+
+        return "redirect:/admin";
+    }
+
+    @PostMapping("/tokens/{id}/cancel")
+    public String cancelToken(
+            @PathVariable Long id,
+            HttpSession session,
+            RedirectAttributes redirectAttributes) {
+
+        if (!authService.isLoggedIn(session)) {
+            return "redirect:/admin/login";
+        }
+
+        try {
+            QueueToken token = queueService.cancelToken(id);
+            redirectAttributes.addFlashAttribute("infoMessage",
+                    "Token " + token.getTokenNumber() + " has been CANCELLED.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
         }

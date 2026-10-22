@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SmartQueue — Digital Queue & Token Management</title>
-    <meta name="description" content="Generate and track your smart queue token online. Eliminate waiting in physical lines.">
+    <title>WaitWise — Digital Queue & Token Management</title>
+    <meta name="description" content="WaitWise: Less Waiting. More Doing. Generate and track virtual queue tokens online.">
     <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
 </head>
 <body>
@@ -12,16 +12,19 @@
     <!-- Header Navigation -->
     <header class="site-header">
         <div class="nav-container">
-            <a href="/" class="brand">
-                <span class="brand-icon">SQ</span>
-                <span>SmartQueue</span>
+            <a href="/" class="brand-wrapper">
+                <span class="brand-icon">WW</span>
+                <div class="brand-details">
+                    <span class="brand-title">Wait<span class="brand-accent">Wise</span></span>
+                    <span class="brand-tagline">Less Waiting. More Doing.</span>
+                </div>
             </a>
             <ul class="nav-links">
                 <li><a href="/" class="active">Kiosk Home</a></li>
                 <li><a href="/display">Live Display</a></li>
                 <li><a href="/admin">Admin Console</a></li>
                 <li>
-                    <a th:href="@{/api/health}" href="/api/health" class="status-badge" target="_blank" title="System Health">
+                    <a th:href="@{/api/health}" href="/api/health" class="status-badge" target="_blank" title="System Health Status">
                         <span class="pulse-dot"></span>
                         <span>System UP</span>
                     </a>
@@ -41,8 +44,51 @@
             <span th:text="${searchError}">Token not found.</span>
         </div>
 
-        <!-- If user has an active token (generated or tracked) -->
-        <section th:if="${myToken}" class="ticket-card" aria-label="Your Token Ticket">
+        <!-- 4 Aligned Summary Metrics Cards -->
+        <section class="stats-grid-4" aria-label="Queue Summary Statistics">
+            <!-- 1. Currently Serving -->
+            <div class="stat-card success">
+                <div class="stat-header">
+                    <span class="stat-label">Currently Serving</span>
+                    <span class="stat-icon">&#128227;</span>
+                </div>
+                <div class="stat-value" th:text="${#lists.size(servingTokens)}">0</div>
+                <div class="stat-subtext">Active at service counters</div>
+            </div>
+
+            <!-- 2. Waiting in Line -->
+            <div class="stat-card warning">
+                <div class="stat-header">
+                    <span class="stat-label">Waiting in Line</span>
+                    <span class="stat-icon">&#9203;</span>
+                </div>
+                <div class="stat-value" th:text="${stats.totalWaiting()}">0</div>
+                <div class="stat-subtext">Customers queued next</div>
+            </div>
+
+            <!-- 3. Served Today -->
+            <div class="stat-card primary">
+                <div class="stat-header">
+                    <span class="stat-label">Served Today</span>
+                    <span class="stat-icon">&#10004;&#65039;</span>
+                </div>
+                <div class="stat-value" th:text="${stats.totalCompleted()}">0</div>
+                <div class="stat-subtext">Completed consultations</div>
+            </div>
+
+            <!-- 4. Total Tokens -->
+            <div class="stat-card navy">
+                <div class="stat-header">
+                    <span class="stat-label">Total Tokens</span>
+                    <span class="stat-icon">&#127915;</span>
+                </div>
+                <div class="stat-value" th:text="${stats.totalToday()}">0</div>
+                <div class="stat-subtext">Issued tokens today</div>
+            </div>
+        </section>
+
+        <!-- Digital Ticket Card (Shown when a token is issued or tracked) -->
+        <section th:if="${myToken}" class="ticket-card" aria-label="Your Digital Queue Ticket">
             <div class="ticket-badge">Your Digital Ticket</div>
             <div class="ticket-number" th:text="${myToken.tokenNumber}">GEN-001</div>
             <div class="ticket-service">
@@ -60,62 +106,46 @@
                     <span class="ticket-meta-val" th:text="${peopleAhead}">0</span>
                 </div>
                 <div class="ticket-meta-item">
-                    <span class="ticket-meta-label">Est. Wait Time</span>
+                    <span class="ticket-meta-label">Estimated Wait</span>
                     <span class="ticket-meta-val" th:text="${estimatedWaitMinutes + ' min'}">5 min</span>
                 </div>
             </div>
 
-            <div th:if="${myToken.status.name() == 'SERVING'}" style="margin-top: 1.5rem; background: rgba(16, 185, 129, 0.25); border: 1px solid #34d399; padding: 0.75rem; border-radius: var(--radius-md);">
-                <strong style="color: #6ee7b7; font-size: 1.1rem;">&#128227; Please proceed to: </strong>
-                <span style="color: #ffffff; font-weight: 800; font-size: 1.25rem;" th:text="${myToken.counterName ?: 'Counter 1'}">Counter 1</span>
+            <div th:if="${myToken.status.name() == 'SERVING'}" class="serving-banner">
+                <strong style="color: #6ee7b7; font-size: 1.15rem;">&#128227; Please Proceed To: </strong>
+                <span style="color: #ffffff; font-weight: 850; font-size: 1.35rem;" th:text="${myToken.counterName ?: 'Counter 1'}">Counter 1</span>
             </div>
         </section>
 
-        <!-- Current Queue Status Overview Grid -->
-        <section class="stats-grid" aria-label="Queue Statistics">
-            <div class="stat-card primary">
-                <div class="stat-label">Currently Serving</div>
-                <div class="stat-value" th:text="${#lists.size(servingTokens)}">0</div>
-            </div>
-            <div class="stat-card warning">
-                <div class="stat-label">In Waiting Line</div>
-                <div class="stat-value" th:text="${stats.totalWaiting()}">0</div>
-            </div>
-            <div class="stat-card success">
-                <div class="stat-label">Served Today</div>
-                <div class="stat-value" th:text="${stats.totalCompleted()}">0</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">Total Tokens</div>
-                <div class="stat-value" th:text="${stats.totalToday()}">0</div>
-            </div>
-        </section>
-
-        <!-- Main Content 2-Column: Token Generation Form + Live Serving Preview -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.75rem;">
+        <!-- Main 2-Column Responsive Kiosk Layout -->
+        <div class="kiosk-grid">
             
-            <!-- Issue Token Card -->
-            <section class="card" aria-labelledby="form-heading">
+            <!-- Column 1: Token Generation Form Card -->
+            <section class="card" aria-labelledby="token-form-title">
                 <div class="card-header">
-                    <h2 id="form-heading" class="card-title">&#127915; Take a Digital Token</h2>
+                    <h2 id="token-form-title" class="card-title">&#127915; Generate Virtual Token</h2>
                 </div>
 
                 <form th:action="@{/tokens}" method="POST" id="tokenForm">
                     <div class="form-group">
-                        <label class="form-label">1. Select Required Service</label>
+                        <label class="form-label">1. Select Service Category</label>
                         <div class="service-cards">
                             <label th:each="service, stat : ${services}" class="service-radio-card" th:classappend="${stat.first} ? 'selected' : ''">
                                 <input type="radio" name="serviceType" th:value="${service.name()}" th:checked="${stat.first}" required>
-                                <span class="service-name" th:text="${service.displayName}">General Enquiry</span>
-                                <span class="service-desc" th:text="${service.description}">General questions and basic service information.</span>
-                                <span class="service-wait" th:text="'Avg. ' + ${service.averageWaitMinutes} + 'm wait'">Avg. 5m wait</span>
+                                <div class="service-card-body">
+                                    <div class="service-card-top">
+                                        <span class="service-name" th:text="${service.displayName}">General Enquiry</span>
+                                        <span class="service-wait" th:text="'Avg. ' + ${service.averageWaitMinutes} + 'm wait'">Avg. 5m wait</span>
+                                    </div>
+                                    <p class="service-desc" th:text="${service.description}">General questions and basic service information.</p>
+                                </div>
                             </label>
                         </div>
                     </div>
 
                     <div class="form-group">
                         <label for="customerName" class="form-label">2. Your Name (Optional)</label>
-                        <input type="text" id="customerName" name="customerName" class="form-input" placeholder="e.g. John Doe (leave empty for Guest)">
+                        <input type="text" id="customerName" name="customerName" class="form-input" placeholder="e.g. Alex Johnson (Leave empty for Guest)">
                     </div>
 
                     <button type="submit" class="btn btn-primary btn-lg btn-block" id="generateTokenBtn">
@@ -124,30 +154,31 @@
                 </form>
             </section>
 
-            <!-- Current Service Status & Lookup Card -->
+            <!-- Column 2: Ticket Tracker & Live Desk Calling -->
             <div>
-                <!-- Token Search Card -->
-                <section class="card" style="margin-bottom: 1.25rem;">
+                <!-- Ticket Lookup Card -->
+                <section class="card">
                     <div class="card-header">
-                        <h2 class="card-title">&#128269; Track Existing Ticket</h2>
+                        <h2 class="card-title">&#128269; Track Your Ticket</h2>
                     </div>
-                    <form th:action="@{/}" method="GET" style="display: flex; gap: 0.5rem;">
-                        <input type="text" name="tokenNumber" class="form-input" placeholder="e.g. GEN-001" required style="font-family: var(--font-mono); text-transform: uppercase;">
-                        <button type="submit" class="btn btn-secondary">Check</button>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.85rem;">Check your real-time position and estimated wait time.</p>
+                    <form th:action="@{/}" method="GET" style="display: flex; gap: 0.65rem;">
+                        <input type="text" name="tokenNumber" class="form-input" placeholder="e.g. GEN-001" required style="font-family: var(--font-mono); text-transform: uppercase; font-weight: 700;">
+                        <button type="submit" class="btn btn-secondary" style="flex-shrink: 0;">Check</button>
                     </form>
                 </section>
 
                 <!-- Currently Serving Desk Summary -->
                 <section class="card">
                     <div class="card-header">
-                        <h2 class="card-title">&#128227; Now Calling Desks</h2>
+                        <h2 class="card-title">&#128227; Desks Now Calling</h2>
                         <a href="/display" class="btn btn-secondary btn-sm" target="_blank">TV Display &rarr;</a>
                     </div>
 
                     <div th:if="${#lists.isEmpty(servingTokens)}" class="empty-state">
                         <div class="empty-icon">&#9203;</div>
-                        <p>No tokens currently at counters.</p>
-                        <span style="font-size: 0.8rem; color: var(--text-muted);">Next available ticket will be called shortly.</span>
+                        <p style="font-weight: 600; color: var(--text-main);">No tickets currently at counters.</p>
+                        <span style="font-size: 0.825rem;">Next available ticket will be summoned shortly.</span>
                     </div>
 
                     <div th:unless="${#lists.isEmpty(servingTokens)}" class="table-wrapper">
@@ -156,7 +187,7 @@
                                 <tr>
                                     <th>Token</th>
                                     <th>Service</th>
-                                    <th>Counter</th>
+                                    <th>Desk</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -178,20 +209,23 @@
         </div>
     </main>
 
-    <!-- Footer -->
+    <!-- Site Footer -->
     <footer class="site-footer">
         <div class="footer-container">
-            <p>&copy; 2026 SmartQueue System. Production-ready digital queue management.</p>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span class="brand-icon" style="width: 24px; height: 24px; font-size: 0.75rem;">WW</span>
+                <p>&copy; 2026 <strong>WaitWise</strong> &mdash; <em>Less Waiting. More Doing.</em></p>
+            </div>
             <ul class="footer-links">
                 <li><a href="/">Kiosk</a></li>
                 <li><a href="/display">Live Display</a></li>
-                <li><a href="/admin">Admin Operations</a></li>
+                <li><a href="/admin">Admin Console</a></li>
                 <li><a href="/api/health">Health API</a></li>
             </ul>
         </div>
     </footer>
 
-    <!-- Radio Card Highlight Helper -->
+    <!-- Radio Card Selection Script -->
     <script>
         document.querySelectorAll('.service-radio-card').forEach(card => {
             card.addEventListener('click', () => {

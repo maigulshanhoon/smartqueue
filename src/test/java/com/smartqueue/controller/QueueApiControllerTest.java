@@ -104,5 +104,11 @@ class QueueApiControllerTest {
         mockMvc.perform(post("/api/queue/tokens/" + t2.getId() + "/skip"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("SKIPPED")));
+
+        // Issue another and cancel
+        QueueToken t3 = queueService.issueToken(ServiceType.TECHNICAL_SUPPORT, "Customer 3");
+        mockMvc.perform(post("/api/queue/tokens/" + t3.getId() + "/cancel"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status", is("CANCELLED")));
     }
 }

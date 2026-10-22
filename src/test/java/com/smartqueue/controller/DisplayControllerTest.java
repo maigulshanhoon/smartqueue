@@ -27,6 +27,6 @@ class DisplayControllerTest {
                 .andExpect(model().attributeExists("stats"))
                 .andExpect(model().attributeExists("servingTokens"))
                 .andExpect(model().attributeExists("waitingTokens"))
-                .andExpect(content().string(containsString("SmartQueue Display Board")));
+                .andExpect(content().string(containsString("WaitWise")));
     }
 }

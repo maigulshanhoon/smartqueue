@@ -26,6 +26,6 @@ class HealthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.status", is("UP")))
-                .andExpect(jsonPath("$.application", is("SmartQueue")));
+                .andExpect(jsonPath("$.application", is("WaitWise")));
     }
 }

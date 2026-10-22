@@ -23,6 +23,8 @@ public interface QueueTokenRepository extends JpaRepository<QueueToken, Long> {
 
     List<QueueToken> findTop15ByStatusInOrderByCompletedAtDesc(List<TokenStatus> statuses);
 
+    List<QueueToken> findTop50ByOrderByCreatedAtDesc();
+
     Optional<QueueToken> findFirstByStatusOrderByCreatedAtAsc(TokenStatus status);
 
     Optional<QueueToken> findFirstByServiceTypeAndStatusOrderByCreatedAtAsc(ServiceType serviceType, TokenStatus status);
