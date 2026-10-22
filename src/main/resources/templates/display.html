@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartQueue — Live Queue Display</title>
+    <meta name="description" content="Live digital queue display board showing now serving tokens and next in line.">
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+</head>
+<body class="display-body">
+
+    <!-- Top Header -->
+    <header class="display-header">
+        <a href="/" style="display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: #ffffff;">
+            <span class="brand-icon">SQ</span>
+            <span style="font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em;">SmartQueue Display Board</span>
+        </a>
+        <div style="display: flex; align-items: center; gap: 1.5rem;">
+            <div id="liveTime" style="font-family: var(--font-mono); font-size: 1.15rem; color: #94a3b8; font-weight: 600;">--:--:--</div>
+            <div class="status-badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border-color: #059669;">
+                <span class="pulse-dot"></span>
+                <span>Live Feed</span>
+            </div>
+            <a href="/" class="btn btn-secondary btn-sm" style="color: #cbd5e1; border-color: #374151; background: #1f2937;">&larr; Kiosk</a>
+        </div>
+    </header>
+
+    <main class="display-container">
+        <!-- Left Column: Primary Now Serving Card -->
+        <section class="display-main-card" id="primaryServingContainer" aria-live="polite">
+            <div class="display-main-label">&#128227; NOW SERVING</div>
+            
+            <div th:if="${#lists.isEmpty(servingTokens)}" id="emptyServingMessage">
+                <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.4;">&#9203;</div>
+                <div style="font-size: 2.25rem; font-weight: 700; color: #64748b;">Counters Open</div>
+                <div style="font-size: 1.15rem; color: #475569; margin-top: 0.5rem;">Please take a token at the kiosk</div>
+            </div>
+
+            <div th:unless="${#lists.isEmpty(servingTokens)}" id="activeServingContent">
+                <div class="display-big-token" id="primaryTokenNum" th:text="${servingTokens[0].tokenNumber}">GEN-001</div>
+                <div class="display-big-counter" id="primaryCounterName" th:text="${servingTokens[0].counterName ?: 'Counter 1'}">Counter 1</div>
+                <div class="display-big-service" id="primaryServiceName" th:text="${servingTokens[0].serviceType.displayName}">General Enquiry</div>
+            </div>
+        </section>
+
+        <!-- Right Column: Other Serving & Upcoming Tokens -->
+        <section class="display-sidebar">
+            <!-- Secondary Serving Counters if multiple counters are active -->
+            <div id="additionalCountersSection" style="margin-bottom: 1.75rem;">
+                <div class="display-side-title">
+                    <span>Active Counters</span>
+                    <span id="activeCounterCount" class="badge badge-serving" th:text="${#lists.size(servingTokens)}">0</span>
+                </div>
+                <div id="additionalCountersList">
+                    <div th:if="${#lists.isEmpty(servingTokens)}" style="color: #64748b; font-size: 0.9rem; padding: 0.5rem 0;">
+                        No active service counters.
+                    </div>
+                    <div th:each="serving, iter : ${servingTokens}" th:if="${iter.index > 0}" class="display-queue-item" style="border-left: 4px solid var(--success);">
+                        <div>
+                            <span class="display-queue-token" th:text="${serving.tokenNumber}">GEN-002</span>
+                            <div style="color: #94a3b8; font-size: 0.8rem;" th:text="${serving.serviceType.displayName}">Billing</div>
+                        </div>
+                        <span class="badge badge-serving" th:text="${serving.counterName}">Counter 2</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming In Line Tokens -->
+            <div>
+                <div class="display-side-title">
+                    <span>Upcoming In Queue</span>
+                    <span id="waitingCountBadge" class="badge badge-waiting" th:text="${#lists.size(waitingTokens)}">0</span>
+                </div>
+                
+                <div id="waitingQueueList">
+                    <div th:if="${#lists.isEmpty(waitingTokens)}" id="emptyWaitingMsg" style="color: #64748b; font-size: 0.9rem; padding: 1rem 0; text-align: center;">
+                        Queue is currently clear.
+                    </div>
+                    <div th:each="waiting, iter : ${waitingTokens}" th:if="${iter.index < 6}" class="display-queue-item">
+                        <div>
+                            <span class="display-queue-token" th:text="${waiting.tokenNumber}">GEN-003</span>
+                            <div style="color: #94a3b8; font-size: 0.8rem;" th:text="${waiting.serviceType.displayName}">Tech Support</div>
+                        </div>
+                        <span style="font-size: 0.825rem; color: #94a3b8;" th:text="'#' + ${iter.count} + ' in line'">#1 in line</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Auto-polling JavaScript for dynamic updates without page reload -->
+    <script>
+        // Update Live Clock
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString();
+            document.getElementById('liveTime').textContent = timeStr;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        let lastServingToken = null;
+
+        // Fetch Live Queue Data
+        async function refreshQueue() {
+            try {
+                const response = await fetch('/api/queue/status');
+                if (!response.ok) return;
+
+                const data = await response.json();
+                const serving = data.nowServing || [];
+                const waiting = data.waiting || [];
+
+                // 1. Update Primary Serving Card
+                const primaryContainer = document.getElementById('primaryServingContainer');
+                if (serving.length > 0) {
+                    const top = serving[0];
+                    primaryContainer.innerHTML = `
+                        <div class="display-main-label">&#128227; NOW SERVING</div>
+                        <div class="display-big-token" id="primaryTokenNum">${top.tokenNumber}</div>
+                        <div class="display-big-counter" id="primaryCounterName">${top.counterName || 'Counter 1'}</div>
+                        <div class="display-big-service" id="primaryServiceName">${top.serviceType?.displayName || top.serviceType}</div>
+                    `;
+
+                    // Trigger visual flash if new token is called
+                    if (lastServingToken && lastServingToken !== top.tokenNumber) {
+                        primaryContainer.style.boxShadow = '0 0 50px rgba(16, 185, 129, 0.6)';
+                        setTimeout(() => {
+                            primaryContainer.style.boxShadow = '';
+                        }, 1500);
+                    }
+                    lastServingToken = top.tokenNumber;
+                } else {
+                    primaryContainer.innerHTML = `
+                        <div class="display-main-label">&#128227; NOW SERVING</div>
+                        <div style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.4;">&#9203;</div>
+                        <div style="font-size: 2.25rem; font-weight: 700; color: #64748b;">Counters Open</div>
+                        <div style="font-size: 1.15rem; color: #475569; margin-top: 0.5rem;">Please take a token at the kiosk</div>
+                    `;
+                    lastServingToken = null;
+                }
+
+                // 2. Update Active Counters Counter Badge
+                document.getElementById('activeCounterCount').textContent = serving.length;
+                const additionalCountersList = document.getElementById('additionalCountersList');
+                if (serving.length <= 1) {
+                    additionalCountersList.innerHTML = `<div style="color: #64748b; font-size: 0.9rem; padding: 0.5rem 0;">${serving.length === 1 ? '1 active counter serving.' : 'No active service counters.'}</div>`;
+                } else {
+                    let html = '';
+                    for (let i = 1; i < serving.length; i++) {
+                        const s = serving[i];
+                        html += `
+                            <div class="display-queue-item" style="border-left: 4px solid var(--success);">
+                                <div>
+                                    <span class="display-queue-token">${s.tokenNumber}</span>
+                                    <div style="color: #94a3b8; font-size: 0.8rem;">${s.serviceType?.displayName || s.serviceType}</div>
+                                </div>
+                                <span class="badge badge-serving">${s.counterName || 'Counter'}</span>
+                            </div>
+                        `;
+                    }
+                    additionalCountersList.innerHTML = html;
+                }
+
+                // 3. Update Waiting Queue List
+                document.getElementById('waitingCountBadge').textContent = waiting.length;
+                const waitingQueueList = document.getElementById('waitingQueueList');
+                if (waiting.length === 0) {
+                    waitingQueueList.innerHTML = `<div style="color: #64748b; font-size: 0.9rem; padding: 1rem 0; text-align: center;">Queue is currently clear.</div>`;
+                } else {
+                    let html = '';
+                    const limit = Math.min(waiting.length, 6);
+                    for (let i = 0; i < limit; i++) {
+                        const w = waiting[i];
+                        html += `
+                            <div class="display-queue-item">
+                                <div>
+                                    <span class="display-queue-token">${w.tokenNumber}</span>
+                                    <div style="color: #94a3b8; font-size: 0.8rem;">${w.serviceType?.displayName || w.serviceType}</div>
+                                </div>
+                                <span style="font-size: 0.825rem; color: #94a3b8;">#${i + 1} in line</span>
+                            </div>
+                        `;
+                    }
+                    waitingQueueList.innerHTML = html;
+                }
+
+            } catch (err) {
+                console.warn('Queue poll warning:', err);
+            }
+        }
+
+        // Poll every 3 seconds
+        setInterval(refreshQueue, 3000);
+    </script>
+</body>
+</html>

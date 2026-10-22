@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartQueue Admin — Operations Console</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="site-header">
+        <div class="nav-container">
+            <a href="/" class="brand">
+                <span class="brand-icon">SQ</span>
+                <span>SmartQueue <span style="font-size: 0.8rem; font-weight: 500; color: var(--primary); background: var(--primary-light); padding: 0.2rem 0.5rem; border-radius: var(--radius-sm); margin-left: 0.35rem;">Operator</span></span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="/">Kiosk</a></li>
+                <li><a href="/display" target="_blank">Display Screen &#8599;</a></li>
+                <li><a href="/admin" class="active">Operations Console</a></li>
+                <li>
+                    <form th:action="@{/admin/logout}" method="POST" style="display: inline;">
+                        <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--danger); border-color: var(--danger-border);">Sign Out</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </header>
+
+    <main>
+        <!-- Alerts -->
+        <div th:if="${successMessage}" class="alert alert-success" role="alert">
+            <span>&#9989;</span>
+            <span th:text="${successMessage}">Operation completed successfully.</span>
+        </div>
+        <div th:if="${infoMessage}" class="alert alert-info" role="alert">
+            <span>&#8505;&#65039;</span>
+            <span th:text="${infoMessage}">Queue information update.</span>
+        </div>
+        <div th:if="${errorMessage}" class="alert alert-error" role="alert">
+            <span>&#9888;&#65039;</span>
+            <span th:text="${errorMessage}">An error occurred.</span>
+        </div>
+
+        <!-- Metric KPI Cards -->
+        <section class="stats-grid" aria-label="Operational Metrics">
+            <div class="stat-card warning">
+                <div class="stat-label">Waiting In Line</div>
+                <div class="stat-value" th:text="${stats.totalWaiting()}">0</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-label">Currently Serving</div>
+                <div class="stat-value" th:text="${stats.totalServing()}">0</div>
+            </div>
+            <div class="stat-card primary">
+                <div class="stat-label">Served Today</div>
+                <div class="stat-value" th:text="${stats.totalCompleted()}">0</div>
+            </div>
+            <div class="stat-card danger">
+                <div class="stat-label">Skipped / No Show</div>
+                <div class="stat-value" th:text="${stats.totalSkipped()}">0</div>
+            </div>
+        </section>
+
+        <!-- Quick Action Bar -->
+        <section class="admin-action-bar">
+            <div>
+                <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.2rem;">Counter Call Dispatcher</h2>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Summon the next waiting ticket to your desk</p>
+            </div>
+
+            <form th:action="@{/admin/call-next}" method="POST" class="action-form-group">
+                <label for="counterSelect" style="font-size: 0.875rem; font-weight: 600;">Counter Desk:</label>
+                <select id="counterSelect" name="counterName" class="form-select" style="width: auto;">
+                    <option value="Counter 1">Counter 1</option>
+                    <option value="Counter 2">Counter 2</option>
+                    <option value="Counter 3">Counter 3</option>
+                    <option value="Counter 4">Counter 4</option>
+                    <option value="Help Desk">Help Desk</option>
+                </select>
+
+                <select name="serviceType" class="form-select" style="width: auto;">
+                    <option value="">Any Service Type</option>
+                    <option th:each="service : ${services}" th:value="${service.name()}" th:text="${service.displayName}">General Enquiry</option>
+                </select>
+
+                <button type="submit" class="btn btn-primary btn-lg" id="callNextBtn">
+                    <span>&#128227; Call Next Token</span>
+                </button>
+            </form>
+        </section>
+
+        <!-- Two Column Tables: Currently Serving & Waiting Queue -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+            
+            <!-- Active Tokens Being Served -->
+            <section class="card">
+                <div class="card-header">
+                    <h2 class="card-title">&#9654;&#65039; Currently at Counters (<span th:text="${#lists.size(servingTokens)}">0</span>)</h2>
+                </div>
+
+                <div th:if="${#lists.isEmpty(servingTokens)}" class="empty-state">
+                    <div class="empty-icon">&#10004;&#65039;</div>
+                    <p>No active customers at counters right now.</p>
+                    <span style="font-size: 0.825rem;">Use "Call Next Token" above to summon a waiting ticket.</span>
+                </div>
+
+                <div th:unless="${#lists.isEmpty(servingTokens)}" class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Token</th>
+                                <th>Counter</th>
+                                <th>Service</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="token : ${servingTokens}">
+                                <td>
+                                    <strong style="font-family: var(--font-mono); font-size: 1.15rem; color: var(--success);" th:text="${token.tokenNumber}">GEN-001</strong>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);" th:text="${token.customerName}">Guest</div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-serving" th:text="${token.counterName ?: 'Counter 1'}">Counter 1</span>
+                                </td>
+                                <td th:text="${token.serviceType.displayName}">General Enquiry</td>
+                                <td>
+                                    <div style="display: flex; gap: 0.4rem;">
+                                        <!-- Complete Button -->
+                                        <form th:action="@{/admin/tokens/{id}/complete(id=${token.id})}" method="POST" style="display: inline;">
+                                            <button type="submit" class="btn btn-success btn-sm" title="Mark as Done">&#10004; Complete</button>
+                                        </form>
+                                        <!-- Skip Button -->
+                                        <form th:action="@{/admin/tokens/{id}/skip(id=${token.id})}" method="POST" style="display: inline;">
+                                            <button type="submit" class="btn btn-warning btn-sm" title="Customer Absent">&#9197; Skip</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Waiting In Line Queue -->
+            <section class="card">
+                <div class="card-header">
+                    <h2 class="card-title">&#9201; Waiting Queue (<span th:text="${#lists.size(waitingTokens)}">0</span>)</h2>
+                </div>
+
+                <div th:if="${#lists.isEmpty(waitingTokens)}" class="empty-state">
+                    <div class="empty-icon">&#128164;</div>
+                    <p>No customers currently waiting.</p>
+                </div>
+
+                <div th:unless="${#lists.isEmpty(waitingTokens)}" class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Position</th>
+                                <th>Token</th>
+                                <th>Service</th>
+                                <th>Direct Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="token, iter : ${waitingTokens}">
+                                <td>
+                                    <span style="font-weight: 700; color: var(--text-muted);" th:text="'#' + ${iter.count}">#1</span>
+                                </td>
+                                <td>
+                                    <strong style="font-family: var(--font-mono); font-size: 1.1rem; color: var(--primary);" th:text="${token.tokenNumber}">GEN-002</strong>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);" th:text="${token.customerName}">Guest</div>
+                                </td>
+                                <td th:text="${token.serviceType.displayName}">Billing</td>
+                                <td>
+                                    <form th:action="@{/admin/tokens/{id}/call(id=${token.id})}" method="POST" style="display: inline-flex; gap: 0.35rem;">
+                                        <input type="hidden" name="counterName" value="Counter 1">
+                                        <button type="submit" class="btn btn-secondary btn-sm" title="Call this ticket directly">&#128227; Call</button>
+                                    </form>
+                                    <form th:action="@{/admin/tokens/{id}/skip(id=${token.id})}" method="POST" style="display: inline;">
+                                        <button type="submit" class="btn btn-danger btn-sm" title="Dismiss without serving">&#10006;</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- Recent Activity History Log -->
+        <section class="card">
+            <div class="card-header">
+                <h2 class="card-title">&#128337; Recent Ticket History</h2>
+                <span style="font-size: 0.825rem; color: var(--text-muted);">Last 15 completed or skipped tickets</span>
+            </div>
+
+            <div th:if="${#lists.isEmpty(recentTokens)}" class="empty-state" style="padding: 1.5rem;">
+                <p>No completed or skipped tokens recorded yet today.</p>
+            </div>
+
+            <div th:unless="${#lists.isEmpty(recentTokens)}" class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Token</th>
+                            <th>Customer</th>
+                            <th>Service</th>
+                            <th>Desk</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="hist : ${recentTokens}">
+                            <td>
+                                <strong style="font-family: var(--font-mono);" th:text="${hist.tokenNumber}">GEN-001</strong>
+                            </td>
+                            <td th:text="${hist.customerName}">Guest</td>
+                            <td th:text="${hist.serviceType.displayName}">General Enquiry</td>
+                            <td th:text="${hist.counterName ?: '-'}">Counter 1</td>
+                            <td>
+                                <span class="badge" th:classappend="${hist.status.name() == 'COMPLETED'} ? 'badge-completed' : 'badge-skipped'" th:text="${hist.status.displayName}">Completed</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-container">
+            <p>&copy; 2026 SmartQueue Operations Console. Secure Counter Dispatch.</p>
+            <ul class="footer-links">
+                <li><a href="/">Kiosk</a></li>
+                <li><a href="/display">Display</a></li>
+                <li><a href="/api/queue/status">Queue JSON</a></li>
+            </ul>
+        </div>
+    </footer>
+
+</body>
+</html>
