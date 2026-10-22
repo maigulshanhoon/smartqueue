@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartQueue — Digital Queue Management System</title>
+    <meta name="description" content="SmartQueue is a modern, real-time digital queue management system designed to eliminate physical lines, optimize counter flow, and enhance customer satisfaction.">
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+</head>
+<body>
+
+    <!-- Site Header & Navigation -->
+    <header class="site-header">
+        <div class="nav-container">
+            <a href="/" class="brand">
+                <span class="brand-icon">SQ</span>
+                <span>SmartQueue</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li>
+                    <a th:href="@{/api/health}" href="/api/health" class="status-badge" title="Check system health">
+                        <span class="pulse-dot"></span>
+                        <span>API Health: Online</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main>
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="hero-pill">
+                <span>Enterprise Virtual Queue Management</span>
+            </div>
+            <h1 class="hero-title">
+                Eliminate Physical Lines with <span class="hero-highlight">SmartQueue</span>
+            </h1>
+            <p class="hero-description">
+                SmartQueue replaces crowded waiting rooms with an intuitive, real-time digital queuing platform. Empower customers to track their position effortlessly while your service counters serve tickets with maximum operational efficiency.
+            </p>
+            <div class="cta-group">
+                <a href="#features" class="btn btn-primary">Discover Features</a>
+                <a th:href="@{/api/health}" href="/api/health" class="btn btn-secondary">Check System Health</a>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" aria-labelledby="features-heading">
+            <div class="section-header">
+                <h2 id="features-heading" class="section-title">Core System Capabilities</h2>
+                <p class="section-subtitle">Engineered for clinics, service counters, retail stores, and enterprise offices.</p>
+            </div>
+
+            <div class="features-grid">
+                <article class="feature-card">
+                    <div class="feature-icon-wrapper" aria-hidden="true">&#127915;</div>
+                    <h3>Virtual Token Issuance</h3>
+                    <p>
+                        Customers check in online or via on-premise kiosks, receiving an instant digital ticket with estimated waiting times.
+                    </p>
+                </article>
+
+                <article class="feature-card">
+                    <div class="feature-icon-wrapper" aria-hidden="true">&#9201;</div>
+                    <h3>Real-Time Wait Tracking</h3>
+                    <p>
+                        Live countdowns and automated position alerts notify customers when their counter is ready, eliminating missed turns.
+                    </p>
+                </article>
+
+                <article class="feature-card">
+                    <div class="feature-icon-wrapper" aria-hidden="true">&#128187;</div>
+                    <h3>Counter Dispatch Console</h3>
+                    <p>
+                        Agents call, hold, transfer, and complete tickets with minimal friction, keeping line turnover balanced and fast.
+                    </p>
+                </article>
+
+                <article class="feature-card">
+                    <div class="feature-icon-wrapper" aria-hidden="true">&#128274;</div>
+                    <h3>Resilient Architecture</h3>
+                    <p>
+                        Powered by a modern Spring Boot 4 foundation with decoupled MySQL storage and in-memory test profiles for high reliability.
+                    </p>
+                </article>
+            </div>
+        </section>
+
+        <!-- Architecture & System Status Section -->
+        <section id="architecture" aria-labelledby="arch-heading">
+            <div class="system-card">
+                <div class="system-card-header">
+                    <div>
+                        <h2 id="arch-heading" class="system-card-title">System & Foundation Status</h2>
+                        <p class="section-subtitle">Real-time status indicators and active runtime configuration.</p>
+                    </div>
+                    <a th:href="@{/api/health}" href="/api/health" class="btn btn-secondary" style="font-size: 0.85rem; padding: 0.5rem 1rem;">
+                        View JSON Endpoint
+                    </a>
+                </div>
+
+                <div class="system-details-grid">
+                    <div class="detail-item">
+                        <div class="detail-label">Application Name</div>
+                        <div class="detail-value" th:text="${appName}">SmartQueue</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Health API</div>
+                        <div class="detail-value">
+                            <a th:href="@{/api/health}" href="/api/health" style="color: var(--color-primary); text-decoration: none;">/api/health</a>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Persistence Tier</div>
+                        <div class="detail-value">Spring Data JPA + MySQL</div>
+                    </div>
+                    <div class="detail-item">
+                        <div class="detail-label">Template Engine</div>
+                        <div class="detail-value">Thymeleaf Standard Dialect</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Site Footer -->
+    <footer class="site-footer">
+        <div class="footer-container">
+            <p>&copy; 2026 SmartQueue. All rights reserved. Clean, accessible, and responsive queue automation.</p>
+            <ul class="footer-links">
+                <li><a href="/">Home</a></li>
+                <li><a th:href="@{/api/health}" href="/api/health">Health Check</a></li>
+            </ul>
+        </div>
+    </footer>
+
+</body>
+</html>
